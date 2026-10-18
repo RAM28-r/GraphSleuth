@@ -1,0 +1,7 @@
+
+streamlit
+pandas
+falkordb
+python-dotenv
+groq
+mcp
