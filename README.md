@@ -124,6 +124,45 @@ These paths identify potential impact. They do not independently establish that 
 
 Actual findings depend on the data stored in FalkorDB.
 
+
+## Cypher Queries and Graph Algorithms
+
+GraphSleuth uses Cypher pattern matching and bounded variable-length relationship traversal to retrieve incident evidence and trace service dependencies.
+
+### 1. Incident Lookup
+
+```cypher
+MATCH (i:Incident {id: $incident_id})-[:AFFECTS]->(s:Service)
+OPTIONAL MATCH (i)-[:HAS_ALERT]->(a:Alert)
+RETURN i, s, a
+```
+
+This query retrieves the incident, its associated service, and linked alert information when available.
+
+### 2. Upstream Dependency Tracing
+
+```cypher
+MATCH (s:Service {name: $service})-[:DEPENDS_ON*1..10]->(d:Service)
+RETURN DISTINCT d.name, d.status
+```
+
+This follows outgoing `DEPENDS_ON` relationships for one to ten hops to identify services that the selected service depends on.
+
+### 3. Downstream Dependency Tracing
+
+```cypher
+MATCH (d:Service)-[:DEPENDS_ON*1..10]->(s:Service {name: $service})
+RETURN DISTINCT d.name, d.status
+```
+
+This traverses dependency relationships in reverse to identify services that depend on the selected service, directly or indirectly.
+
+### 4. Dependency-Edge Evidence
+
+The `get_service_dependency_edges` MCP tool retrieves direct relationship evidence around a selected service to help explain dependency paths.
+
+**Note:** Dependency paths indicate potential impact; they do not prove that a service has failed. Verify the query property names and return fields against the actual implementation before submission.
+
 ## Requirements
 
 - Python 3.12 or a compatible Python version supported by the installed dependencies
